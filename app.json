@@ -1,0 +1,44 @@
+{
+  "name": "Slideshare Downloader Bot",
+  "description": "A Telegram bot to download slideshare document",
+  "logo" : "https://public.slidesharecdn.com/v2/images/logo/slideshare-scribd-logo@2x.png",
+  "success_url" : "https://t.me/slidedlbot",
+  "keywords": [
+    "telegram",
+    "bot",
+    "slideshare",
+    "sabbir"
+  ],
+  "repository": "https://github.com/sabbir-21/slide-TG-bot",
+  "website": "https://github.com/sabbir-21/slide-TG-bot",
+  "env": {
+    "BOT_TOKEN": {
+      "description": "Your bot Bot Token, get this value from @BotFather.",
+      "value": ""
+    },
+    "API_KEY": {
+      "description": "Your APP API KEY, get this from https://my.telegram.org",
+      "value": ""
+    },
+    "API_HASH": {
+      "description": "Your APP HASH, get this from https://my.telegram.org",
+     "value": ""
+    },
+    "CHANNEL_URL": {
+      "description": "Your promotional URL.",
+      "value": "https://github.com/search?q=downloader+telegram+bot"
+    },
+    "SITE_URL": {
+      "description": "Your site URL.",
+      "value": "https://google.com"
+    },
+    "BOT_URL": {
+      "description": "Username of your Telegram Bot (without @). Example: SlideDLBot",
+      "value": ""
+    },
+    "WORKERS": {
+      "description": "Number of threads to use, this depends on usage.  4 is the recommended (and default) amount, but your experience may vary.",
+      "value": "4"
+    }
+  }
+}
