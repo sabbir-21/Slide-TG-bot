@@ -66,12 +66,34 @@ def slideshare_dl(client, message):
     app.send_document(chat_id=message.chat.id,
                         document=f"{directory}/{filename}",
                         caption=f"**File :** __{filename}__\n"
+                        f"__Developed by @sabbir21__"
                         f"__Uploaded by @{BOT_URL}__",
-                        file_name=f"{directory}",
+                        file_name=f"{filename}",
                         parse_mode='md',
                         progress=progress,
                         progress_args=(a, start, title))
     a.delete()
+    ##a.delete()
+    #second fn
+    #pptapil = f"https://www.slidesharedownloader.com/slideshareappiiiippg/pptapi.php?url={link}"
+    #pptfilename = link.split("/")[-1]+".ppt"
+    #r = requests.get(pptapil, allow_redirects=True)
+    #open(f'{directory}/{pptfilename}', 'wb').write(r.content)
+    #a.edit(f'__Downloaded ppt file!\n'
+    #        f'Uploading to Telegram Now ⏳__')
+    #start = time.time()
+    #title = pptfilename
+    #app.send_document(chat_id=message.chat.id,
+    #                    document=f"{directory}/{pptfilename}",
+    #                    caption=f"**File:** {pptfilename}\n"
+    #                    #f"**Size :** __{total} MB__\n\n"
+    #                    f"__Uploaded by @{BOT_URL}__",
+    #                    file_name=f"{pptfilename}",
+    #                    parse_mode='md',
+    #                    progress=progress,
+    #                    progress_args=(a, start, title))
+    #a.delete()
+    #end second fn
     try:
         shutil.rmtree(directory)
     except:
