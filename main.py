@@ -1,102 +1,78 @@
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InlineQueryResultArticle, InputTextMessageContent
-import shutil
+from bs4 import *
 import requests
 import os
-import re
-from bs4 import BeautifulSoup as bs
 import time
-from datetime import timedelta
-import math
-import base64
-from progress_bar import progress, TimeFormatter, humanbytes
+import re
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+from bs4 import BeautifulSoup
+import shutil
 from dotenv import load_dotenv
+#img2pdf
+from PIL import Image
+from natsort import natsorted
 
 load_dotenv()
 bot_token = os.environ.get('BOT_TOKEN')
-workers = int(os.environ.get('WORKERS'))
-api = int(os.environ.get('API_KEY'))
+api = os.environ.get('API_KEY')
 hash = os.environ.get('API_HASH')
-chnnl = os.environ.get('CHANNEL_URL')
-site = os.environ.get('SITE_URL')
-BOT_URL = os.environ.get('BOT_URL')
 
-app = Client("sabbir21", bot_token=bot_token, api_id=api, api_hash=hash)
-#, workers=workers
+webdl = Client("sabbir21", bot_token=bot_token, api_id=api, api_hash=hash)
 
-@app.on_message(filters.command('start'))
-def start(client, message):
-    kb = [[InlineKeyboardButton('URL 🛡', url=chnnl),InlineKeyboardButton('Site 🔰', url=site)]]
-    reply_markup = InlineKeyboardMarkup(kb)
-    app.send_message(chat_id=message.from_user.id, text=f"Hello there, I am **Slideshare Downloader Bot**.\nI can download Slideshare PDF.\n\n"
-                          "__**Developer :**__ __@sabbir21__\n"
-                          "__**Language :**__ __Python__\n"
-                          "__**Framework :**__ __🔥 Pyrogram__",
-                     parse_mode='md',
-                     reply_markup=reply_markup)
+@webdl.on_message(filters.command(["start"]))
+async def start(_, message: Message):
+    text = f"Hello , I am a slide downloader bot.\n\n__**Developer :**__ __@sabbir21__\n__**Language :**__ __Python__\n__**Framework :**__ __🔥 Pyrogram__"
 
-@app.on_message(filters.command('help'))
-def help(client, message):
-    kb = [[InlineKeyboardButton('URL 🛡', url=chnnl),InlineKeyboardButton('Site 🔰', url=site)]]
-    reply_markup = InlineKeyboardMarkup(kb)
-    app.send_message(chat_id=message.from_user.id, text=f"Hello there, I am **Slideshare Downloader Bot**.\nI can download any Slideshare PDF from link. Limited to 50MB file\n\n"
-                                            "__Send me a Slideshare url__",
-                     parse_mode='md',
-                     reply_markup=reply_markup)
+    await message.reply_text(text=text, disable_web_page_preview=True, quote=True)
 
-@app.on_message((filters.regex("http://")|filters.regex("https://")) & (filters.regex('slideshare')))
-def slideshare_dl(client, message):
-    a = app.send_message(chat_id=message.chat.id,
-                         text='__Downloading File... __',
-                         parse_mode='md')
-    link = re.findall(r'\bhttps?://.*[(slideshare)]\S+', message.text)[0]
-    link = link.split("?")[0]
+@webdl.on_message(filters.command(["help"]))
+async def start(_, message: Message):
+    text = f"To download slide, send a link." \
+    "\nSend me any link for slide pdf."
+    await message.reply_text(text=text, disable_web_page_preview=True, quote=True)
 
-    apil = f"https://www.slidesharedownloader.com/slideshareappiiiippg/pdfapi.php?url={link}"
-    directory = str(round(time.time()))
-    os.mkdir(directory)
-    filename = link.split("/")[-1]+".pdf"
-    r = requests.get(apil, allow_redirects=True)
-    open(f'{directory}/{filename}', 'wb').write(r.content)
-
-    a.edit(f'__Downloaded file!\n'
-            f'Uploading to Telegram Now ⏳__')
-    start = time.time()
-    title = filename
-    app.send_document(chat_id=message.chat.id,
-                        document=f"{directory}/{filename}",
-                        caption=f"**File :** __{filename}__\n"
-                        f"__Developed by @sabbir21__"
-                        f"__Uploaded by @{BOT_URL}__",
-                        file_name=f"{filename}",
-                        parse_mode='md',
-                        progress=progress,
-                        progress_args=(a, start, title))
-    a.delete()
-    ##a.delete()
-    #second fn
-    #pptapil = f"https://www.slidesharedownloader.com/slideshareappiiiippg/pptapi.php?url={link}"
-    #pptfilename = link.split("/")[-1]+".ppt"
-    #r = requests.get(pptapil, allow_redirects=True)
-    #open(f'{directory}/{pptfilename}', 'wb').write(r.content)
-    #a.edit(f'__Downloaded ppt file!\n'
-    #        f'Uploading to Telegram Now ⏳__')
-    #start = time.time()
-    #title = pptfilename
-    #app.send_document(chat_id=message.chat.id,
-    #                    document=f"{directory}/{pptfilename}",
-    #                    caption=f"**File:** {pptfilename}\n"
-    #                    #f"**Size :** __{total} MB__\n\n"
-    #                    f"__Uploaded by @{BOT_URL}__",
-    #                    file_name=f"{pptfilename}",
-    #                    parse_mode='md',
-    #                    progress=progress,
-    #                    progress_args=(a, start, title))
-    #a.delete()
-    #end second fn
+@webdl.on_message((filters.regex("https") | filters.regex("http") | filters.regex("www")) & (filters.regex('slideshare')))
+async def scrapping(bot, message):
+    txt = await message.reply_text("Validating Link", quote=True)
     try:
-        shutil.rmtree(directory)
-    except:
-        pass
+        url = re.findall(r'\bhttps?://.*[(slideshare)]\S+', message.text)[0]
+        url = url.split("?")[0]
+        folder_name = str(round(time.time()))
+        filename = url.split("/")[-1]
+        r = requests.get(url)
+        await txt.edit(text=f"Downloading slide", disable_web_page_preview=True)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        images = soup.findAll('img', attrs = {'srcset' : True})
+        os.mkdir(folder_name)
+        if len(images) != 0:
+            for i, image in enumerate(images):
+                image_link = image["srcset"].split(',')[-1].split(' ')[1]
+                try:
+                    r = requests.get(image_link).content
+                    try:
+                        r = str(r, 'utf-8')
+                    except UnicodeDecodeError:
+                        with open(f"{folder_name}/images{i+1}.jpg", "wb+") as f:
+                            f.write(r)
+                except:
+                    pass
+        await txt.edit(text=f"Uploading to telegram", disable_web_page_preview=True)
+        #pdf making
+        file_names = os.listdir(folder_name)
+        file_names = natsorted(file_names)
+        pdfimages = [Image.open(f"{folder_name}/{f}") for f in file_names]
+        pdf_path = filename + '.pdf'
+        pdfimages[0].save(pdf_path, "PDF" , resolution=100.0, save_all=True, append_images=pdfimages[1:])
 
-app.run()
+        await message.reply_document(filename+".pdf", caption=f"**File:** {filename}.pdf\n"f"Developed by: **Sabbir Ahmed** @sabbir21", quote=True)
+        
+        await txt.delete()
+    except Exception as error:
+        print(error)
+        await message.reply_text(text=f"{error}", disable_web_page_preview=True, quote=True)
+        await txt.delete()
+        return
+    os.remove(filename+".pdf")
+    shutil.rmtree(folder_name)
+
+webdl.run()
