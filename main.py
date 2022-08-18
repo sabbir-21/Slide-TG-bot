@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 #img2pdf
 from PIL import Image
 from natsort import natsorted
+from tqdm.auto import tqdm
 
 load_dotenv()
 bot_token = os.environ.get('BOT_TOKEN')
@@ -119,6 +120,27 @@ async def scrapping(bot, message):
     os.remove(filename+".pdf")
     shutil.rmtree(folder_name)
 
+#any dl fn
+@webdl.on_message((filters.regex("https") | filters.regex("http") | filters.regex("www")))
+async def scrapping(bot, message):
+    txt2 = await message.reply_text("Validating the Link", quote=True)
+    try:
 
+        url = re.findall(r'\bhttps?://.*\S+', message.text)[0]
+        url = url.split("?")[0]
+        #folder_name = str(round(time.time()))
+        with requests.get(url, stream=True) as r:
+            total_length = int(r.headers.get("Content-Length"))
+            with tqdm.wrapattr(r.raw, "read", total=total_length, desc="")as raw:
+                with open(f"{os.path.basename(r.url)}", 'wb')as output:
+                    shutil.copyfileobj(raw, output)
+        await message.reply_document(output.name, caption=f"File Upload requested by {message.chat.username}\n"f"Developed by: **Sabbir Ahmed** @sabbir21", quote=True)
+        #os.remove(output.name)
+    except Exception as error:
+        print(error)
+        await message.reply_text(text=f"{error}", disable_web_page_preview=True, quote=True)
+        await txt2.delete()
+        return
+    os.remove(output.name)
 #run the function
 webdl.run()
