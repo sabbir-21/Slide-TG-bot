@@ -74,5 +74,51 @@ async def scrapping(bot, message):
         return
     os.remove(filename+".pdf")
     shutil.rmtree(folder_name)
+    
+#slideplayer fn
+@webdl.on_message((filters.regex("https") | filters.regex("http") | filters.regex("www")) & (filters.regex('slideplayer')))
+async def scrapping(bot, message):
+    txt = await message.reply_text("Validating Slideplayer Link", quote=True)
+    try:
+        url = re.findall(r'\bhttps?://.*[(slideplayer)]\S+', message.text)[0]
+        url = url.split("?")[0]
+        folder_name = str(round(time.time()))
+        filename = url.split("/")[-2]
+        r = requests.get(url)
+        await txt.edit(text=f"Downloading from slideplayer", disable_web_page_preview=True)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        images = soup.findAll('img', attrs = {'srcset' : True})
+        os.mkdir(folder_name)
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        #images = soup.find_all('img')
+        #loop fn
+        i = 0
+        for ns in soup.find_all('noscript'):
+            images = ns.img['src'].split("//")[1]
+            images = "http://" + images
+            i += 1
+            r = requests.get(images).content
+            open(f"{folder_name}/images_{i}.jpg", "wb+").write(r)
+        await txt.edit(text=f"Uploading to telegram", disable_web_page_preview=True)
+        #pdf making
+        file_names = os.listdir(folder_name) #make folder
+        file_names = natsorted(file_names)
+        pdfimages = [Image.open(f"{folder_name}/{f}") for f in file_names]
+        pdf_path = filename + '.pdf'
+        pdfimages[0].save(pdf_path, "PDF" , resolution=100.0, save_all=True, append_images=pdfimages[1:])
 
+        await message.reply_document(filename+".pdf", caption=f"**File:** {filename}.pdf\nUpload requested by {message.chat.first_name}\n"f"Developed by: **Sabbir Ahmed** @sabbir21", quote=True)
+        
+        await txt.delete()
+    except Exception as error:
+        print(error)
+        await message.reply_text(text=f"{error}", disable_web_page_preview=True, quote=True)
+        await txt.delete()
+        return
+    os.remove(filename+".pdf")
+    shutil.rmtree(folder_name)
+
+
+#run the function
 webdl.run()
