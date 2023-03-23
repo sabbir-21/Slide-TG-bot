@@ -65,20 +65,14 @@ async def slideshare(bot, message):
         r = requests.get(url)
         await txt.edit(text=f"Downloading slide", disable_web_page_preview=True)
         soup = BeautifulSoup(r.text, 'html.parser')
-        images = soup.findAll('img', attrs = {'srcset' : True})
-        os.mkdir(folder_name)
-        if len(images) != 0:
-            for i, image in enumerate(images):
-                image_link = image["srcset"].split(',')[-1].split(' ')[1]
-                try:
-                    r = requests.get(image_link).content
-                    try:
-                        r = str(r, 'utf-8')
-                    except UnicodeDecodeError:
-                        with open(f"{folder_name}/images{i+1}.jpg", "wb+") as f:
-                            f.write(r)
-                except:
-                    pass
+        os.makedirs(folder_name, exist_ok=True)
+        i = 0
+        for ns in soup.find_all('picture'):
+            images = ns.source['srcset'].split("//")[-1]
+            images = "http://" + images
+            i += 1
+            r = requests.get(images).content
+            open(f"{folder_name}/images_{i}.jpg", "wb+").write(r)
         
         await txt.edit(text=f"Uploading to telegram", disable_web_page_preview=True)
         #pdf making
@@ -87,8 +81,6 @@ async def slideshare(bot, message):
         pdfimages = [Image.open(f"{folder_name}/{f}") for f in file_names]
         pdf_path = filename + '.pdf'
         pdfimages[0].save(pdf_path, "PDF" , resolution=100.0, save_all=True, append_images=pdfimages[1:])
-
-        #await message.reply_document(filename+".pdf", caption=f"**File:** {filename}.pdf\nUpload requested by {message.chat.first_name}\n"f"Developed by: **Sabbir Ahmed** @sabbir21", quote=True)
         await message.reply_document(filename+".pdf", caption=f"**File:** {filename}.pdf\n"f"Developed by: **Sabbir Ahmed** @sabbir21", quote=True)
         await txt.delete()
         #text parse
@@ -103,7 +95,6 @@ async def slideshare(bot, message):
             shutil.rmtree(folder_name)
             os.remove(filename+".pdf")
             os.remove(filename+".txt")
-            
         except: pass
     except Exception as error:
         print(error)
